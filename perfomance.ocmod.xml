@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modification>
+    <code>perfomence checker ttfb</code>
+    <name>perfomence checker ttfb</name>
+    <version>1</version>
+    <author>kj</author>
+    <link>cleanphp.pp.ua</link>
+    <file path="system/engine/{router,front}.php">
+        <operation error="skip">
+            <search>
+                <![CDATA[$action = $this->execute($action);]]>
+            </search>
+            <add position="after" offset = "1">
+                <![CDATA[
+                if (strpos($_SERVER['REQUEST_URI'], "/admin/") !== false || !isset(Action::$timings))
+                {
+                    return;
+                }
+
+                $maxtime = 200;
+        		foreach(Action::$timings as $key => $arr)
+        		{
+                    uasort($arr, function($a, $b) {
+                        return $a['time'] <=> $b['time'];
+                    });
+                        
+                    echo "<table class='ttfbperf-table'>";
+                    echo "<thead>";
+                    echo "<tr>";
+                    echo "<th>".$key."</th>";
+                    echo "<th>time</th>";
+                    echo "<th>count</th>";
+                    echo "</tr>";
+                    echo "</thead>";
+                    echo "<tbody>";
+
+                    foreach($arr as $key2 => $val)
+                    {
+                        $percent = $val['time']/$maxtime;
+                        $R = round(255 * $percent);
+                        $G = 255 - $R; 
+                        $bgccc = "rgba(".$R.", ".$G.", 0, 0.5)";
+
+            			echo "<tr style='background-color: $bgccc;'>";
+                			echo "<td>" . $key2 . "</td>";
+                			echo "<td>" . number_format($val['time'], 1) . " ms</td>";
+                			echo "<td>" . $val['count'] . "</td>";
+                			echo "</tr>";
+                    }
+                    echo "</tbody>";
+                    echo "</table>";
+            	}
+                echo "<div class='clearfix'></div><style>
+                .ttfbperf-table { margin: 5px; border:1px solid #ddd; float:left; font-size: 10px; }
+                .ttfbperf-table tbody { }
+                .ttfbperf-table thead th { background-color: #ddd; }
+                .ttfbperf-table td, .ttfbperf-table th { padding: 5px 8px; border:1px solid #ddd;}
+                </style>";
+    		    ]]>
+            </add>
+        </operation>
+    </file>
+
+    <file path="system/engine/action.php">
+        <operation error="skip">
+            <search>
+                <![CDATA[return call_user_func_array(array($controller, $this->method), $args);]]>
+            </search>
+            <add position="replace">
+            <![CDATA[
+                $time_start = microtime(true);
+    			$res = call_user_func_array(array($controller, $this->method), $args);
+        		if(isset(Action::$timings)) 
+        		{
+                    $time_end = microtime(true);
+                    $diff = ($time_end - $time_start) * 1000;
+                    $parts = explode("/", $this->route);
+                    array_pop($parts);
+                    $newroute = implode("/", $parts);
+
+                    if(!isset(Action::$timings[$newroute][$this->route]))
+                    {
+                        Action::$timings[$newroute][$this->route]['time'] = 0;
+                        Action::$timings[$newroute][$this->route]['count'] = 0;
+                    }
+
+                        Action::$timings[$newroute][$this->route]['time'] += $diff;
+                        Action::$timings[$newroute][$this->route]['count']++;
+        		}
+        		return $res;
+                ]]>
+            </add>
+        </operation>
+            
+        <operation error="skip">
+            <search>
+                <![CDATA[private $id;]]>
+            </search>
+            <add position="after"  >
+              <![CDATA[public static $timings = [];]]>
+            </add>
+        </operation>
+    </file>
+</modification>
