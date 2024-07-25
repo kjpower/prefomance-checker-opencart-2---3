@@ -42,19 +42,20 @@
                         $bgccc = "rgba(".$R.", ".$G.", 0, 0.5)";
 
             			echo "<tr style='background-color: $bgccc;'>";
-                			echo "<td>" . $key2 . "</td>";
-                			echo "<td>" . number_format($val['time'], 1) . " ms</td>";
-                			echo "<td>" . $val['count'] . "</td>";
-                			echo "</tr>";
+                		echo "<td>" . $key2 . "</td>";
+                		echo "<td>" . number_format($val['time'], 1) . " ms</td>";
+                		echo "<td>" . $val['count'] . "</td>";
+                		echo "</tr>";
                     }
                     echo "</tbody>";
                     echo "</table>";
             	}
-                echo "<div class='clearfix'></div><style>
-                .ttfbperf-table { margin: 5px; border:1px solid #ddd; float:left; font-size: 10px; }
-                .ttfbperf-table tbody { }
-                .ttfbperf-table thead th { background-color: #ddd; }
-                .ttfbperf-table td, .ttfbperf-table th { padding: 5px 8px; border:1px solid #ddd;}
+                echo "<div class='clearfix'></div>
+                <style>
+                    .ttfbperf-table { margin: 5px; border:1px solid #ddd; float:left; font-size: 10px; }
+                    .ttfbperf-table tbody { }
+                    .ttfbperf-table thead th { background-color: #ddd; }
+                    .ttfbperf-table td, .ttfbperf-table th { padding: 5px 8px; border:1px solid #ddd; }
                 </style>";
     		    ]]>
             </add>
@@ -70,7 +71,8 @@
             <![CDATA[
                 $time_start = microtime(true);
     			$res = call_user_func_array(array($controller, $this->method), $args);
-        		if(isset(Action::$timings)) 
+        		
+                if(isset(Action::$timings)) 
         		{
                     $time_end = microtime(true);
                     $diff = ($time_end - $time_start) * 1000;
@@ -84,9 +86,10 @@
                         Action::$timings[$newroute][$this->route]['count'] = 0;
                     }
 
-                        Action::$timings[$newroute][$this->route]['time'] += $diff;
-                        Action::$timings[$newroute][$this->route]['count']++;
+                    Action::$timings[$newroute][$this->route]['time'] += $diff;
+                    Action::$timings[$newroute][$this->route]['count']++;
         		}
+
         		return $res;
                 ]]>
             </add>
@@ -96,7 +99,7 @@
             <search>
                 <![CDATA[private $id;]]>
             </search>
-            <add position="after"  >
+            <add position="after">
               <![CDATA[public static $timings = [];]]>
             </add>
         </operation>
