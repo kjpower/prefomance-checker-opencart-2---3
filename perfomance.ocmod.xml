@@ -5,34 +5,39 @@
     <version>1</version>
     <author>kj</author>
     <link>cleanphp.pp.ua</link>
-    <file path="system/engine/{router,front}.php">
+       <file path="system/engine/{router,front}.php">
         <operation error="skip">
             <search>
                 <![CDATA[$action = $this->execute($action);]]>
             </search>
             <add position="after" offset = "1">
                 <![CDATA[
-                if (strpos($_SERVER['REQUEST_URI'], "/admin/") !== false || !isset(Action::$timings))
-                {
-                    return;
-                }
+                $this->user = new Cart\User($this->registry);
+
+               if (strpos($_SERVER['REQUEST_URI'], "/admin/") !== false || !$this->user->isLogged() || !isset(Action::$timings)) {
+                         return;
+               }
 
                 $maxtime = 200;
-        		foreach(Action::$timings as $key => $arr)
-        		{
+                echo "<button id='toggle-info-btn' class='btn btn-primary btn-sm fixed-top-right'><i class=\"fa fa-cog fa-spin\"></i> </button>";
+                echo "<div id='info-panel' class='hidden'>";
+                echo "<div class='ttfbperf-container row'>"; 
+                foreach(Action::$timings as $key => $arr)
+                {
                     uasort($arr, function($a, $b) {
-                        return $a['time'] <=> $b['time'];
+                        return $b['time'] <=> $a['time']; // Изменено: $b['time'] <=> $a['time']
                     });
                         
-                    echo "<table class='ttfbperf-table'>";
-                    echo "<thead>";
+                    echo "<div class='col-md-3'>"; 
+                    echo "<table class='ttfbperf-table table table-bordered table-striped'>";
+                    echo "<thead style='font-size: 14px;'>";
                     echo "<tr>";
                     echo "<th>".$key."</th>";
                     echo "<th>time</th>";
                     echo "<th>count</th>";
                     echo "</tr>";
                     echo "</thead>";
-                    echo "<tbody>";
+                    echo "<tbody style='font-size: 12px;'>";
 
                     foreach($arr as $key2 => $val)
                     {
@@ -41,23 +46,36 @@
                         $G = 255 - $R; 
                         $bgccc = "rgba(".$R.", ".$G.", 0, 0.5)";
 
-            			echo "<tr style='background-color: $bgccc;'>";
-                		echo "<td>" . $key2 . "</td>";
-                		echo "<td>" . number_format($val['time'], 1) . " ms</td>";
-                		echo "<td>" . $val['count'] . "</td>";
-                		echo "</tr>";
+                        echo "<tr style='background-color: $bgccc;'>";
+                        echo "<td>" . $key2 . "</td>";
+                        echo "<td>" . number_format($val['time'], 1) . " ms</td>";
+                        echo "<td>" . $val['count'] . "</td>";
+                        echo "</tr>";
                     }
                     echo "</tbody>";
                     echo "</table>";
-            	}
-                echo "<div class='clearfix'></div>
+                    echo "</div>"; 
+                }
+                echo "</div>"; 
+                echo "</div>";
+                echo "<script>
+                    document.getElementById('toggle-info-btn').addEventListener('click', function() {
+                        var panel = document.getElementById('info-panel');
+                        if (panel.classList.contains('hidden')) {
+                            panel.classList.remove('hidden');
+                        } else {
+                            panel.classList.add('hidden');
+                        }
+                    });
+                </script>
                 <style>
-                    .ttfbperf-table { margin: 5px; border:1px solid #ddd; float:left; font-size: 10px; }
-                    .ttfbperf-table tbody { }
-                    .ttfbperf-table thead th { background-color: #ddd; }
-                    .ttfbperf-table td, .ttfbperf-table th { padding: 5px 8px; border:1px solid #ddd; }
+                    .fixed-top-right { position: fixed; top: 10px; right: 10px; z-index: 1000; }
+                    .hidden { display: none; }
+                    .ttfbperf-container { display: flex; flex-wrap: wrap; } 
+                    .ttfbperf-table { margin: 5px; box-sizing: border-box; }
+                    .clearfix::after { content: ''; display: table; clear: both; }
                 </style>";
-    		    ]]>
+                ]]>
             </add>
         </operation>
     </file>
@@ -70,10 +88,10 @@
             <add position="replace">
             <![CDATA[
                 $time_start = microtime(true);
-    			$res = call_user_func_array(array($controller, $this->method), $args);
-        		
+                $res = call_user_func_array(array($controller, $this->method), $args);
+                
                 if(isset(Action::$timings)) 
-        		{
+                {
                     $time_end = microtime(true);
                     $diff = ($time_end - $time_start) * 1000;
                     $parts = explode("/", $this->route);
@@ -88,9 +106,9 @@
 
                     Action::$timings[$newroute][$this->route]['time'] += $diff;
                     Action::$timings[$newroute][$this->route]['count']++;
-        		}
+                }
 
-        		return $res;
+                return $res;
                 ]]>
             </add>
         </operation>
