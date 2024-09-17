@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<modification>
+    <code>perfomence checker ttfb</code>
+    <name>perfomence checker ttfb</name>
+    <version>1</version>
+    <author>kj</author>
+    <link>cleanphp.pp.ua</link>
+	
+  <file path="system/engine/{router,front}.php">
+        <operation error="skip">
+            <search>
+                <![CDATA[$action = $this->execute($action);]]>
+            </search>
+            <add position="after" offset = "1">
+                <![CDATA[
+                $this->user = new Cart\User($this->registry);
+				$debug = $this->user->isLogged() && strpos($_SERVER['REQUEST_URI'], "/admin/") === false;
+
+               if (!$debug) {
+                         return;
+               }
+				echo "<button id='toggle-info-btn' class='btn btn-primary btn-sm fixed-top-right'><i class=\"fa fa-cog fa-spin\"></i> </button>";
+                echo "<div id='info-panel' class='hidden'>";
+              	echo Action::$debug_html;
+    			echo "</div>";
+                echo "<script>
+					document.getElementById('toggle-info-btn').addEventListener('click', function() {
+                        var panel = document.getElementById('info-panel');
+                        if (panel.classList.contains('hidden')) {
+                            panel.classList.remove('hidden');
+                        } else {
+                            panel.classList.add('hidden');
+                        }
+                    });
+					setTimeout(initkjstat, 1000);
+	 				var btn_plus = ' +++';
+					function initkjstat()
+					{ 
+						$('.rowspeed').each(function(index, el) {
+							if($(this).next().hasClass('kjstat'))
+							{
+								$(this).addClass('haschild');
+							}
+						});
+						$(document).on('click', '.rowspeed.haschild', function (e) {
+							$(this).siblings('.kjstat').toggle();
+							$(this).toggleClass('active').siblings('.rowspeed').toggleClass('active');
+						});
+				  	}
+                </script>
+                <style>
+ 					.fixed-top-right { position: fixed; top: 10px; right: 10px; z-index: 1000; }
+                    .hidden { display: none; }
+                    .kjstat .kjstat {display: none;}
+					.rowspeed:hover { cursor: pointer;}
+					.kjstat { padding: 0 0 0 40px; max-width: 700px; margin: 0 auto;}
+					.rowspeed.haschild { background-color: #ddd; }
+					.rowspeed.active { background-color: yellow; color: whie; }
+                </style>";
+                ]]>
+            </add>
+        </operation>
+    </file>
+    <file path="system/engine/action.php">
+        <operation error="skip">
+            <search>
+                <![CDATA[return call_user_func_array(array($controller, $this->method), $args);]]>
+            </search>
+            <add position="replace">
+            <![CDATA[
+
+
+					Action::$lvl++;
+					$time_start = microtime(true);
+     				Action::$debug_html .= "<PRE class='kjstat'>";
+     //for($i=0;$i<Action::$lvl;$i++)
+     //Action::$debug_html .= "--";
+					Action::$debug_html .= "<span class='rowspeed'>" . $this->route."</span> ";
+				
+				
+                $res = call_user_func_array(array($controller, $this->method), $args);
+
+
+                    $time_end = microtime(true);
+                    $diff = ($time_end - $time_start) * 1000;
+                    Action::$debug_html .= "<span class='rowspeed'>";
+
+                    $width =  (int) ($diff/3 > 500 ? 500 : $diff/3);
+					
+                    Action::$debug_html .= "<div style='float:right;'>".(int) $diff ." <span style='width: ".$width."px; height:10px; background:black;display: inline-block;'></span>";
+                    Action::$debug_html .= "</span>";
+                    Action::$debug_html .= "</PRE>";
+					Action::$lvl--;
+                
+				
+
+ 
+                return $res;
+                ]]>
+            </add>
+        </operation>
+            
+        <operation error="skip">
+            <search>
+                <![CDATA[private $id;]]>
+            </search>
+            <add position="after">
+              <![CDATA[
+public static $debug_html = '';
+public static $lvl = 0;
+public static $timings = [];
+public static $timings2 = [];
+]]>
+            </add>
+        </operation>
+    </file>
+</modification>
