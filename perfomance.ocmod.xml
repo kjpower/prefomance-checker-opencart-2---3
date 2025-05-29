@@ -34,7 +34,6 @@
                     echo "<tr>";
                     echo "<th>".$key."</th>";
                     echo "<th>time</th>";
-                    echo "<th>count</th>";
                     echo "</tr>";
                     echo "</thead>";
                     echo "<tbody style='font-size: 12px;'>";
@@ -48,8 +47,9 @@
 
                         echo "<tr style='background-color: $bgccc;'>";
                         echo "<td>" . $key2 . "</td>";
-                        echo "<td>" . number_format($val['time'], 1) . " ms</td>";
-                        echo "<td>" . $val['count'] . "</td>";
+                        echo "<td>" . number_format($val['time'], 1) . "ms / ".$val['count'];
+                        echo "<div style='height: 5px; width: ".($val['time']/2)."px;background-color: black;'></div>";
+                        echo "</td>";
                         echo "</tr>";
                     }
                     echo "</tbody>";
@@ -59,14 +59,19 @@
                 echo "</div>"; 
                 echo "</div>";
                 echo "<script>
-                    document.getElementById('toggle-info-btn').addEventListener('click', function() {
+                document.addEventListener('DOMContentLoaded', function () {
+                    function kjhandler()
+                    {
                         var panel = document.getElementById('info-panel');
                         if (panel.classList.contains('hidden')) {
                             panel.classList.remove('hidden');
                         } else {
                             panel.classList.add('hidden');
                         }
-                    });
+                    }
+                    document.getElementById('toggle-info-btn').removeEventListener('click', kjhandler);
+                    document.getElementById('toggle-info-btn').addEventListener('click', kjhandler);
+                });
                 </script>
                 <style>
                     .fixed-top-right { position: fixed; top: 10px; right: 10px; z-index: 1000; }
