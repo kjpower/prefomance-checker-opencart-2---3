@@ -48,7 +48,7 @@
                         echo "<tr style='background-color: $bgccc;'>";
                         echo "<td>" . $key2 . "</td>";
                         echo "<td>" . number_format($val['time'], 1) . "ms / ".$val['count'];
-                        echo "<div style='height: 5px; width: ".($val['time']/2)."px;background-color: black;'></div>";
+                        echo "<div style='height: 5px; width: ".($val['time']/5)."px;background-color: black;'></div>";
                         echo "</td>";
                         echo "</tr>";
                     }
